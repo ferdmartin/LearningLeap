@@ -17,3 +17,6 @@ pip install pygame numpy torch matplotlib ipython
 ```
 
 To initiate the learning agent and start the game, simply run the following command in your terminal:
+```bash
+python agent.py
+```
