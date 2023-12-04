@@ -21,45 +21,40 @@ class Agent:
 
     def get_state(self, game):
         head = game.snake[0]
-        point_l = Point(head.x - BLOCK_SIZE, head.y)
-        point_r = Point(head.x + BLOCK_SIZE, head.y)
-        point_u = Point(head.x, head.y - BLOCK_SIZE)
-        point_d = Point(head.x, head.y + BLOCK_SIZE)
 
-        dir_l = game.direction == Direction.LEFT
-        dir_r = game.direction == Direction.RIGHT
-        dir_u = game.direction == Direction.UP
-        dir_d = game.direction == Direction.DOWN
+        # Clok-wise directions and angles
+        cw_dirs = [
+        Direction.RIGHT == game.direction, 
+        Direction.DOWN == game.direction,
+        Direction.LEFT == game.direction,
+        Direction.UP == game.direction
+        ]
+        cw_angs = np.array([0, np.pi/2, np.pi, -np.pi/2])
+
+        # Position - in front: 0, on right: 1, on left: -1; BLOCK_SIZE = 20
+        getPoint = lambda pos: Point(
+        head.x + BLOCK_SIZE*np.cos(cw_angs[(cw_dirs.index(True)+pos) % 4]),
+        head.y + BLOCK_SIZE*np.sin(cw_angs[(cw_dirs.index(True)+pos) % 4]))
 
         state = [
-            # danger straight
-            (dir_r and game.is_collision(point_r)) or
-            (dir_l and game.is_collision(point_l)) or
-            (dir_u and game.is_collision(point_u)) or
-            (dir_d and game.is_collision(point_d)),
+        # Danger
+        game.is_collision(getPoint(0)),
+        game.is_collision(getPoint(1)),
+        game.is_collision(getPoint(-1)),
 
-            # danger right
-            (dir_u and game.is_collision(point_r)) or
-            (dir_d and game.is_collision(point_l)) or
-            (dir_l and game.is_collision(point_u)) or
-            (dir_r and game.is_collision(point_d)),
+        # Move direction
+        cw_dirs[2],
+        cw_dirs[0],
+        cw_dirs[3],
+        cw_dirs[1],
 
-            # danger left
-            (dir_d and game.is_collision(point_r)) or
-            (dir_u and game.is_collision(point_l)) or
-            (dir_r and game.is_collision(point_u)) or
-            (dir_l and game.is_collision(point_d)),
-
-            # move direction
-            dir_l, dir_r, dir_u, dir_d,
-
-            # Food loc
-            game.food.x < game.head.x, # food is left of us
-            game.food.x > game.head.x, # food right
-            game.food.y < game.head.y, # food up
-            game.food.y > game.head.y # food down
+        # Food location
+        game.food.x < head.x,
+        game.food.x > head.x,
+        game.food.y < head.y,
+        game.food.y > head.y
         ]
-    
+
         return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, done):
